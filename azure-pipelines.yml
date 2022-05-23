@@ -1,0 +1,95 @@
+# trigger:
+#   branches:
+#     include:
+#     - main
+#   paths:
+#     exclude:
+#     - .gitignore
+#     - README.md
+
+# pr:
+#   branches:
+#     include:
+#     - main
+#   paths:
+#     exclude:
+#     - .gitignore
+#     - README.md
+
+trigger: none
+
+resources:
+  pipelines:
+  - pipeline: pl-pkr-golden-images # Name of the pipeline resource.
+    source: kvncont.pkr-golden-images # The name of the pipeline referenced by this pipeline resource.
+    project: Infrastructure as Code Azure # Required only if the source pipeline is in another project
+    trigger:
+      branches:
+        include:
+        - main
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+- group: group-tf-secrets
+- name: image-name
+  value: azdo-agent-pool-$(Resources.Pipeline.pl-pkr-golden-images.Runname)
+- name: working-directory
+  value: $(System.DefaultWorkingDirectory)/terraform/
+
+stages:
+- stage: CI
+  displayName: CI - Stage
+  jobs:
+  - job: validate
+    displayName: Validate changes
+    steps:
+    - task: Bash@3
+      displayName: Test variable
+      inputs:
+        targetType: 'inline'
+        script: |
+          echo "MY_VAR=$(Resources.Pipeline.pl-pkr-golden-images.Runname)"
+          printenv
+        workingDirectory: '$(working-directory)'
+
+    - task: Bash@3
+      displayName: Terraform format
+      inputs:
+        targetType: 'inline'
+        script: |
+          terraform fmt -check
+        workingDirectory: '$(working-directory)'
+    
+    - task: Bash@3
+      displayName: Terraform validate
+      inputs:
+        targetType: inline
+        script: |
+          terraform init -backend=false
+          terraform validate
+        workingDirectory: '$(working-directory)'
+      
+    - task: TerraformTaskV3@3
+      displayName: Terraform init
+      inputs:
+        provider: 'azurerm'
+        command: 'init'
+        workingDirectory: '$(working-directory)'
+        backendServiceArm: 'Development'
+        backendAzureRmResourceGroupName: '$(tf-st-rg-name)'
+        backendAzureRmStorageAccountName: '$(tf-st-name)'
+        backendAzureRmContainerName: '$(tf-st-container-name)'
+        backendAzureRmKey: '$(tf-st-key)'
+
+    - task: TerraformTaskV3@3
+      displayName: Terraform plan
+      inputs:
+        provider: 'azurerm'
+        command: 'plan'
+        workingDirectory: '$(working-directory)'
+        commandOptions: |
+          -var="image_name=$(image-name)" \
+          -out tf.plan
+        environmentServiceNameAzureRM: 'Development'

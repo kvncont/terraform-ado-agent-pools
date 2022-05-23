@@ -48,7 +48,7 @@ stages:
       inputs:
         targetType: 'inline'
         script: |
-          echo $(pl-pl-pkr-golden-images.image-name)
+          echo $(pl-pkr-golden-images.image-name)
         workingDirectory: '$(working-directory)'
 
     - task: Bash@3

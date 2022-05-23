@@ -16,6 +16,16 @@ pr:
     - .gitignore
     - README.md
 
+resources:
+  pipelines:
+  - pipeline: pl-pkr-golden-images # Name of the pipeline resource.
+    source: kvncont.pkr-golden-images # The name of the pipeline referenced by this pipeline resource.
+    project: Infrastructure as Code Azure # Required only if the source pipeline is in another project
+    trigger:
+      branches:
+        include:
+        - main
+
 pool:
   vmImage: ubuntu-latest
 
@@ -31,6 +41,14 @@ stages:
   - job: validate
     displayName: Validate changes
     steps:
+    - task: Bash@3
+      displayName: Test variable
+      inputs:
+        targetType: 'inline'
+        script: |
+          echo $(pl-pl-pkr-golden-images.image-name)
+        workingDirectory: '$(working-directory)'
+
     - task: Bash@3
       displayName: Terraform format
       inputs:

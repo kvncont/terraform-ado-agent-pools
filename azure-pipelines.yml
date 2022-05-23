@@ -48,6 +48,7 @@ stages:
       inputs:
         targetType: 'inline'
         script: |
+          printenv
           echo $(pl-pkr-golden-images.image-name)
         workingDirectory: '$(working-directory)'
 

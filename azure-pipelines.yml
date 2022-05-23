@@ -1,11 +1,11 @@
-# trigger:
-#   branches:
-#     include:
-#     - main
-#   paths:
-#     exclude:
-#     - .gitignore
-#     - README.md
+trigger:
+  branches:
+    include:
+    - main
+  paths:
+    exclude:
+    - .gitignore
+    - README.md
 
 # pr:
 #   branches:
@@ -16,7 +16,7 @@
 #     - .gitignore
 #     - README.md
 
-trigger: none
+# trigger: none
 
 resources:
   pipelines:
@@ -89,7 +89,5 @@ stages:
         provider: 'azurerm'
         command: 'plan'
         workingDirectory: '$(working-directory)'
-        commandOptions: |
-          -var="image_name=$(image-name)" \
-          -out tf.plan
+        commandOptions: '-var="image_name=$(image-name)" -out tf.plan'
         environmentServiceNameAzureRM: 'Development'

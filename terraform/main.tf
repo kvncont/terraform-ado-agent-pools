@@ -16,7 +16,7 @@ data "local_file" "cloud_init" {
 }
 
 data "azurerm_image" "image_azdo_agent_pool" {
-  name                = var.image_name
+  name                = "image-${var.image_name}"
   resource_group_name = "rg-packer"
 }
 

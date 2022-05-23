@@ -16,6 +16,8 @@
 #     - .gitignore
 #     - README.md
 
+trigger: none
+
 resources:
   pipelines:
   - pipeline: pl-pkr-golden-images # Name of the pipeline resource.
@@ -24,15 +26,15 @@ resources:
     trigger:
       branches:
         include:
-        - test/*
-
-trigger: none
+        - main
 
 pool:
   vmImage: ubuntu-latest
 
 variables:
 - group: group-tf-secrets
+- name: image-name
+  value: azdo-agent-pool-$(Resources.Pipeline.pl-pkr-golden-images.Runname)
 - name: working-directory
   value: $(System.DefaultWorkingDirectory)/terraform/
 
@@ -48,10 +50,8 @@ stages:
       inputs:
         targetType: 'inline'
         script: |
+          echo "MY_VAR=$(Resources.Pipeline.pl-pkr-golden-images.Runname)"
           printenv
-          echo $RESOURCES_PIPELINE_PL-PKR-GOLDEN-IMAGES_RUNNAME
-          echo $(Resources.Pipeline.pl-pkr-golden-images.Runname)
-          echo $(pl-pkr-golden-images.image-name)
         workingDirectory: '$(working-directory)'
 
     - task: Bash@3
@@ -89,5 +89,7 @@ stages:
         provider: 'azurerm'
         command: 'plan'
         workingDirectory: '$(working-directory)'
-        commandOptions: '-out tf.plan'
+        commandOptions: |
+          -var="image_name=$(image-name)" \
+          -out tf.plan
         environmentServiceNameAzureRM: 'Development'

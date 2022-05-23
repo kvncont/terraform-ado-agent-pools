@@ -14,6 +14,12 @@ variable "tags" {
   }
 }
 
+# Image
+variable "image_name" {
+  type        = string
+  description = "Name of the image to use"
+}
+
 # VM
 variable "vm_admin_passwd" {
   type        = string

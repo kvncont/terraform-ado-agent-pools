@@ -49,6 +49,8 @@ stages:
         targetType: 'inline'
         script: |
           printenv
+          echo $RESOURCES_PIPELINE_PL-PKR-GOLDEN-IMAGES_RUNNAME
+          echo $(Resources.Pipeline.pl-pkr-golden-images.Runname)
           echo $(pl-pkr-golden-images.image-name)
         workingDirectory: '$(working-directory)'
 

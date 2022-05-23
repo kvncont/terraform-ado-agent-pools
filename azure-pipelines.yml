@@ -33,8 +33,10 @@ pool:
 
 variables:
 - group: group-tf-secrets
+- name: image-id
+  value: $[replace(variables['Resources.Pipeline.pl-pkr-golden-images.Runname'], '.', '-')]
 - name: image-name
-  value: azdo-agent-pool-$(Resources.Pipeline.pl-pkr-golden-images.Runname)
+  value: azdo-agent-pool-$(image-id)
 - name: working-directory
   value: $(System.DefaultWorkingDirectory)/terraform/
 

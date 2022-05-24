@@ -20,9 +20,8 @@ variable "image_name" {
   description = "Name of the image to use"
 }
 
-# VM
+# VM & VMSS
 variable "vm_admin_passwd" {
   type        = string
-  description = "Admin password for vms"
-  default     = "MySecretPassword123!"
+  description = "Admin password for VM & VMSS"
 }

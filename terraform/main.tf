@@ -40,54 +40,97 @@ resource "azurerm_subnet" "snet" {
   address_prefixes     = ["10.0.1.0/24"]
 }
 
-resource "azurerm_public_ip" "pip" {
-  name                = "pip-${var.suffix_resource_name}"
-  location            = azurerm_resource_group.rg.location
-  resource_group_name = azurerm_resource_group.rg.name
-  allocation_method   = "Static"
-}
-
-resource "azurerm_network_interface" "nic_vm" {
-  name                = "nic-${var.suffix_resource_name}"
-  location            = azurerm_resource_group.rg.location
-  resource_group_name = azurerm_resource_group.rg.name
-
-  ip_configuration {
-    name                          = "internal"
-    subnet_id                     = azurerm_subnet.snet.id
-    private_ip_address_allocation = "Dynamic"
-    public_ip_address_id          = azurerm_public_ip.pip.id
-  }
-
-  tags = var.tags
-}
-
-resource "azurerm_linux_virtual_machine" "vm" {
-  name                            = "vm-${var.suffix_resource_name}"
-  location                        = azurerm_resource_group.rg.location
+# VMSS Config
+resource "azurerm_linux_virtual_machine_scale_set" "vmss" {
+  name                            = "vmss-${var.suffix_resource_name}"
   resource_group_name             = azurerm_resource_group.rg.name
-  size                            = "Standard_B1s"
+  location                        = azurerm_resource_group.rg.location
+  sku                             = "Standard_B1s"
+  instances                       = 0
   admin_username                  = "AzDevOps"
   admin_password                  = var.vm_admin_passwd
   disable_password_authentication = false
-  source_image_id                 = data.azurerm_image.image_azdo_agent_pool.id
+  overprovision                   = false
+  upgrade_mode                    = "Manual"
   custom_data                     = base64encode(data.local_file.cloud_init.content)
-
-  network_interface_ids = [
-    azurerm_network_interface.nic_vm.id,
-  ]
-
-  #   admin_ssh_key {
-  #     username   = "adminuser"
-  #     public_key = file("~/.ssh/id_rsa.pub")
-  #   }
+  source_image_id                 = data.azurerm_image.image_azdo_agent_pool.id
 
   os_disk {
+    storage_account_type = "Premium_LRS"
     caching              = "ReadWrite"
-    storage_account_type = "Standard_LRS"
+  }
+
+  network_interface {
+    name    = "nic-${var.suffix_resource_name}"
+    primary = true
+
+    ip_configuration {
+      name      = "internal"
+      primary   = true
+      subnet_id = azurerm_subnet.snet.id
+    }
   }
 
   boot_diagnostics {}
 
+  lifecycle {
+    ignore_changes = [
+      instances
+    ]
+  }
+
   tags = var.tags
 }
+
+# VM Config
+# resource "azurerm_public_ip" "pip" {
+#   name                = "pip-${var.suffix_resource_name}"
+#   location            = azurerm_resource_group.rg.location
+#   resource_group_name = azurerm_resource_group.rg.name
+#   allocation_method   = "Static"
+# }
+
+# resource "azurerm_network_interface" "nic_vm" {
+#   name                = "nic-${var.suffix_resource_name}"
+#   location            = azurerm_resource_group.rg.location
+#   resource_group_name = azurerm_resource_group.rg.name
+
+#   ip_configuration {
+#     name                          = "internal"
+#     subnet_id                     = azurerm_subnet.snet.id
+#     private_ip_address_allocation = "Dynamic"
+#     public_ip_address_id          = azurerm_public_ip.pip.id
+#   }
+
+#   tags = var.tags
+# }
+
+# resource "azurerm_linux_virtual_machine" "vm" {
+#   name                            = "vm-${var.suffix_resource_name}"
+#   location                        = azurerm_resource_group.rg.location
+#   resource_group_name             = azurerm_resource_group.rg.name
+#   size                            = "Standard_B1s"
+#   admin_username                  = "AzDevOps"
+#   admin_password                  = var.vm_admin_passwd
+#   disable_password_authentication = false
+#   source_image_id                 = data.azurerm_image.image_azdo_agent_pool.id
+#   custom_data                     = base64encode(data.local_file.cloud_init.content)
+
+#   network_interface_ids = [
+#     azurerm_network_interface.nic_vm.id,
+#   ]
+
+#   #   admin_ssh_key {
+#   #     username   = "adminuser"
+#   #     public_key = file("~/.ssh/id_rsa.pub")
+#   #   }
+
+#   os_disk {
+#     caching              = "ReadWrite"
+#     storage_account_type = "Standard_LRS"
+#   }
+
+#   boot_diagnostics {}
+
+#   tags = var.tags
+# }

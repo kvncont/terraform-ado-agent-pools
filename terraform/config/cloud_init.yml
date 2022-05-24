@@ -1,4 +1,4 @@
-# Cloud-config
+#cloud-config
 # Create the docker group
 groups:
   - docker
@@ -8,13 +8,13 @@ system_info:
   default_user:
     groups: [docker]
 
-write_files:
-- path: /etc/environment
-  append: true
-  content: |
-    JAVA_HOME_8_X64="/usr/lib/jvm/java-8-openjdk-amd64/bin/java"
-    JAVA_HOME_11_X64="/usr/lib/jvm/java-11-openjdk-amd64/bin/java"
-    JAVA_HOME_17_X64="/usr/lib/jvm/java-17-openjdk-amd64/bin/java"
+# write_files:
+# - path: /etc/environment
+#   append: true
+#   content: |
+#     JAVA_HOME_8_X64_CLOUD_INIT="/usr/lib/jvm/java-8-openjdk-amd64/bin/java"
+#     JAVA_HOME_11_X64_CLOUD_INIT="/usr/lib/jvm/java-11-openjdk-amd64/bin/java"
+#     JAVA_HOME_17_X64_CLOUD_INIT="/usr/lib/jvm/java-17-openjdk-amd64/bin/java"
 # runcmd:
 
 bootcmd:

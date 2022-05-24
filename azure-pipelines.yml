@@ -91,5 +91,5 @@ stages:
         provider: 'azurerm'
         command: 'plan'
         workingDirectory: '$(working-directory)'
-        commandOptions: '-var="image_name=$(image-name)" -out tf.plan'
+        commandOptions: '-var="image_name=$(image-name)" -var="vm_admin_passwd=$(tf-vm-admin-passwd)" -out tf.plan'
         environmentServiceNameAzureRM: 'Development'

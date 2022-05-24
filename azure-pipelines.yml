@@ -81,7 +81,7 @@ stages:
         provider: 'azurerm'
         command: 'plan'
         workingDirectory: '$(working-directory)'
-        commandOptions: '-var="image_name=$(image-name)" -var="vm_admin_passwd=$(tf-vm-admin-passwd)" -out tf.plan'
+        commandOptions: '-var="image_name=$(image-name)" -var="vm_admin_passwd=$(tf-vm-admin-passwd)" -out tf_$(Build.BuildNumber).plan'
         environmentServiceNameAzureRM: 'Development'
     
     - task: PublishPipelineArtifact@1
@@ -133,5 +133,5 @@ stages:
               provider: 'azurerm'
               command: 'apply'
               workingDirectory: '$(working-directory)'
-              commandOptions: 'tf.plan'
+              commandOptions: 'tf_$(Build.BuildNumber).plan'
               environmentServiceNameAzureRM: 'Development'

@@ -7,16 +7,15 @@ trigger:
     - .gitignore
     - README.md
 
-# pr:
-#   branches:
-#     include:
-#     - main
-#   paths:
-#     exclude:
-#     - .gitignore
-#     - README.md
+pr:
+  branches:
+    include:
+    - main
+  paths:
+    exclude:
+    - .gitignore
+    - README.md
 
-# trigger: none
 
 resources:
   pipelines:
@@ -47,15 +46,6 @@ stages:
   - job: validate
     displayName: Validate changes
     steps:
-    - task: Bash@3
-      displayName: Test variable
-      inputs:
-        targetType: 'inline'
-        script: |
-          echo "MY_VAR=$(Resources.Pipeline.pl-pkr-golden-images.Runname)"
-          printenv
-        workingDirectory: '$(working-directory)'
-
     - task: Bash@3
       displayName: Terraform format
       inputs:
@@ -93,3 +83,55 @@ stages:
         workingDirectory: '$(working-directory)'
         commandOptions: '-var="image_name=$(image-name)" -var="vm_admin_passwd=$(tf-vm-admin-passwd)" -out tf.plan'
         environmentServiceNameAzureRM: 'Development'
+    
+    - task: PublishPipelineArtifact@1
+      displayName: Publish terraform plan
+      condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+      inputs:
+        targetPath: '$(working-directory)/plan_$(Build.BuildNumber).tfplan'
+        artifact: 'Plan'
+        publishLocation: 'pipeline'
+      
+- stage: CD
+  displayName: CD - Stage
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+  dependsOn: CI
+  jobs:
+  - deployment: Deploy
+    environment: Development IaC
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+
+          - checkout: self
+
+          - download: none
+
+          - task: DownloadPipelineArtifact@2
+            displayName: Download terraform plan
+            inputs:
+              buildType: 'current'
+              artifactName: 'Plan'
+              targetPath: '$(working-directory)'
+
+          - task: TerraformTaskV3@3
+            displayName: Terraform init
+            inputs:
+              provider: 'azurerm'
+              command: 'init'
+              workingDirectory: '$(working-directory)'
+              backendServiceArm: 'Development'
+              backendAzureRmResourceGroupName: '$(tf-st-rg-name)'
+              backendAzureRmStorageAccountName: '$(tf-st-name)'
+              backendAzureRmContainerName: '$(tf-st-container-name)'
+              backendAzureRmKey: '$(tf-st-key)'
+
+          - task: TerraformTaskV3@3
+            displayName: Terraform apply
+            inputs:
+              provider: 'azurerm'
+              command: 'apply'
+              workingDirectory: '$(working-directory)'
+              commandOptions: 'tf.plan'
+              environmentServiceNameAzureRM: 'Development'

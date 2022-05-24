@@ -24,4 +24,5 @@ variable "image_name" {
 variable "vm_admin_passwd" {
   type        = string
   description = "Admin password for VM & VMSS"
+  sensitive   = true
 }

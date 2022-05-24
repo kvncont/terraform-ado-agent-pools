@@ -88,7 +88,7 @@ stages:
       displayName: Publish terraform plan
       condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
       inputs:
-        targetPath: '$(working-directory)/plan_$(Build.BuildNumber).plan'
+        targetPath: '$(working-directory)/tf_$(Build.BuildNumber).plan'
         artifact: 'Plan'
         publishLocation: 'pipeline'
       
